@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Reuse and Diffuse: Iterative Denoising for Text-to-Video Generation">
+  <meta name="keywords" content="Stable-Diffusion, Video-Generation, Text2Video">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reuse and Diffuse: Iterative Denoising for Text-to-Video Generation</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.ico">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<!--nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://keunhong.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://hypernerf.github.io">
+            HyperNeRF
+          </a>
+          <a class="navbar-item" href="https://nerfies.github.io">
+            Nerfies
+          </a>
+          <a class="navbar-item" href="https://latentfusion.github.io">
+            LatentFusion
+          </a>
+          <a class="navbar-item" href="https://photoshape.github.io">
+            PhotoShape
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav-->
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Reuse and Diffuse: Iterative Denoising for Text-to-Video Generation</h1>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="#">Anonymous Authors</a><sup>1</sup>
+            </span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>Anonymous Institute</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2309.03549"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a href="https://github.com/anonymous0x233/ReuseAndDiffuse"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code (Coming Soon)</span>
+                  </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <video id="teaser" autoplay muted loop playsinline height="100%">
+        <source src="./static/videos/teaser.mp4"
+                type="video/mp4">
+      </video>
+      <h2 class="subtitle has-text-centered">
+        <span class="dnerf">Nerfies</span> turns selfie videos from your phone into
+        free-viewpoint
+        portraits.
+      </h2>
+    </div>
+  </div>
+</section-->
+
+<!--section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <video id="teaser" autoplay controls muted loop playsinline height="100%">
+        <source src="./static/videos/teaser.mp4" type="video/mp4">
+      </video>
+      <h2 class="subtitle has-text-centered">
+        <span style="font-variant-caps:small-caps;">LateR</span> generates long videos with natural scenes.
+      </h2>
+    </div>
+  </div>
+</section-->
+
+<section class="hero is-light is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">An epic tornado attacking above a glowing city at night.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/an_epic_tornado_attacking_above_a_glowing_city_at_night.mp4" type="video/mp4">
+          </video>
+        </div>
+        <!--div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Pouring milk.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/pouring_milk.mp4" type="video/mp4">
+          </video>
+        </div-->
+        <div class="item item-steve" style="text-align: center;">
+          <div class="item-prompt">A candle is burning.</div>
+          <video poster="" id="steve" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/a_candle_is_burning.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A sailboat sailing on a sunny day in a mountainlake.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/a_sailboat_sailing_on_a_sunny_day_in_a_mountainlake.mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A fluffy bear has colorful wings.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/1_A fluffy bear has colorful wings..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A chihuahua in astronaut suit is floating in space.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/12_A chihuahua in astronaut suit is floating in space..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A shiny golden waterfall is flowing through glacier at night.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/44_A shiny golden waterfall is flowing through glacier at night..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Aerial view of a white sandy beach on the shores of a beautiful sea.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/47_Aerial view of a white sandy beach on the shores of a beautiful sea..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Fireworks bloom in the night sky.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/51_Fireworks bloom in the night sky..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Sunset timelapse at the beach with moving clouds and colors in the sky.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/53_Sunset timelapse at the beach with moving clouds and colors in the sky..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">The orient express is driving through a fantasy landscape.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/55_The Orient Express is driving through a fantasy landscape..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Timelapse at the snow land with aurora in the sky.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/56_Timelapse at the snow land with aurora in the sky..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Waves are crashing against a lone lighthouse, ominous lighting.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/60_Waves are crashing against a lone lighthouse, ominous lighting..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Yellow flowers swing in wind.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/62_Yellow flowers swing in wind..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A swarm of bees is flying around their hive.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/73_A swarm of bees is flying around their hive..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Close up of grapes on a rotating table.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/85_Close up of grapes on a rotating table..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A video that showcases the beauty of nature.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/93_A video that showcases the beauty of nature..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A turtle is swimming.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/113_A turtle is swimming..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">An owl is turning its head.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/119_An owl is turning its head..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A candle is burning.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/125_A candle is burning..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">Clown fish are swimming through the coral reef.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/133_Clown fish are swimming through the coral reef..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A cute cat is watching TV.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/136_A cute cat is watching TV..mp4" type="video/mp4">
+          </video>
+        </div>
+        <div class="item item-chair-tp" style="text-align: center;">
+          <div class="item-prompt">A sailboat is sailing on a sunny day in a mountain lake.</div>
+          <video poster="" id="chair-tp" autoplay muted loop playsinline height="100%" width=480>
+            <source src="./static/videos/151_A sailboat is sailing on a sunny day in a mountain lake..mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+      <div style="font-size:4px">* All these generated examples are post-processed through interpolation and super-resolution.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Inspired by the remarkable success of Latent Diffusion Models (LDMs) for image synthesis, we study LDM for text-to-video generation, which is a formidable challenge due to the computational and memory constraints during both model training and inference. A single LDM is usually only capable of generating a very limited number of video frames. Some existing works focus on separate prediction models for generating more video frames, which suffer from additional training cost and frame-level jittering, however. In this paper, we propose a framework called ``Reuse and Diffuse'' dubbed <i>VidRD</i> to produce more frames following the frames already generated by an LDM. Conditioned on an initial video clip with a small number of frames, additional frames are iteratively generated by reusing the original latent features and following the previous diffusion process. Besides, for the autoencoder used for translation between pixel space and latent space, we inject temporal layers into its decoder and fine-tune these layers for higher temporal consistency. We also propose a set of strategies for composing video-text data that involve diverse content from multiple existing datasets including video datasets for action recognition and image-text datasets. Extensive experiments show that our method achieves good results in both quantitative and qualitative evaluations. Our project page is available <a href="https://anonymous0x233.github.io/ReuseAndDiffuse">here</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+    <!-- Paper video. -->
+    <!--div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Video</h2>
+        <div class="publication-video">
+          <iframe src="https://www.youtube.com/embed/MrKrnHhk8IA?rel=0&amp;showinfo=0"
+                  frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div-->
+    <!--/ Paper video. -->
+  </div>
+</section>
+
+
+<!--section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Animation</h2>
+
+        <h3 class="title is-4">Interpolating states</h3>
+        <div class="content has-text-justified">
+          <p>
+            We can also animate the scene by interpolating the deformation latent codes of two input
+            frames. Use the slider here to linearly interpolate between the left frame and the right
+            frame.
+          </p>
+        </div>
+        <div class="columns is-vcentered interpolation-panel">
+          <div class="column is-3 has-text-centered">
+            <img src="./static/images/interpolate_start.jpg"
+                 class="interpolation-image"
+                 alt="Interpolate start reference image."/>
+            <p>Start Frame</p>
+          </div>
+          <div class="column interpolation-video-column">
+            <div id="interpolation-image-wrapper">
+              Loading...
+            </div>
+            <input class="slider is-fullwidth is-large is-info"
+                   id="interpolation-slider"
+                   step="1" min="0" max="100" value="0" type="range">
+          </div>
+          <div class="column is-3 has-text-centered">
+            <img src="./static/images/interpolate_end.jpg"
+                 class="interpolation-image"
+                 alt="Interpolation end reference image."/>
+            <p class="is-bold">End Frame</p>
+          </div>
+        </div>
+        <br/>
+
+        <h3 class="title is-4">Re-rendering the input video</h3>
+        <div class="content has-text-justified">
+          <p>
+            Using <span class="dnerf">Nerfies</span>, you can re-render a video from a novel
+            viewpoint such as a stabilized camera by playing back the training deformations.
+          </p>
+        </div>
+        <div class="content has-text-centered">
+          <video id="replay-video"
+                 controls
+                 muted
+                 preload
+                 playsinline
+                 width="75%">
+            <source src="./static/videos/replay.mp4"
+                    type="video/mp4">
+          </video>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Related Links</h2>
+
+        <div class="content has-text-justified">
+          <p>
+            There's a lot of excellent work that was introduced around the same time as ours.
+          </p>
+          <p>
+            <a href="https://arxiv.org/abs/2104.09125">Progressive Encoding for Neural Optimization</a> introduces an idea similar to our windowed position encoding for coarse-to-fine optimization.
+          </p>
+          <p>
+            <a href="https://www.albertpumarola.com/research/D-NeRF/index.html">D-NeRF</a> and <a href="https://gvv.mpi-inf.mpg.de/projects/nonrigid_nerf/">NR-NeRF</a>
+            both use deformation fields to model non-rigid scenes.
+          </p>
+          <p>
+            Some works model videos with a NeRF by directly modulating the density, such as <a href="https://video-nerf.github.io/">Video-NeRF</a>, <a href="https://www.cs.cornell.edu/~zl548/NSFF/">NSFF</a>, and <a href="https://neural-3d-video.github.io/">DyNeRF</a>
+          </p>
+          <p>
+            There are probably many more by the time you are reading this. Check out <a href="https://dellaert.github.io/NeRF/">Frank Dellart's survey on recent NeRF papers</a>, and <a href="https://github.com/yenchenlin/awesome-NeRF">Yen-Chen Lin's curated list of NeRF papers</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section-->
+
+<section class="section">
+  <div class="container is-max-desktop content">
+    <h2 class="title">Model Architecture</h2>
+    <figure>
+      <img src="./static/images/model.jpg" alt="Architecture of our model." width=760px>
+      <figcaption>The architecture of our model for text-guided video synthesis.</figcaption>
+    </figure>
+    <p>The architecture of our video diffusion model derived from a text-to-image diffusion model.
+    Modules with snowflake marks are frozen while those with flame marks are trainable. Modules with
+    dashed boxes are newly added on the basis of the original 2D diffusion model. In this model,
+    most network layers are initialized with the pre-trained model weights of Stable Diffusion including
+    VAE and the spatial layers of U-Net. Only the parameters of two temporal modules, marked with
+    dashed boxes, <i>Temp-Conv</i> representing 3D convolution layer and <i>Temp-Attn</i> representing the temporal
+    attention layer are newly added and randomly initialized.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop content">
+    <h2 class="title">Iterative Video Generation</h2>
+    <figure>
+      <img src="./static/images/method.jpg" alt="Iterative video generation with a single LDM." width=600px>
+      <figcaption>Iterative video generation with a single LDM.</figcaption>
+    </figure>
+    <p>
+      Videos can be generated clip-by-clip iteratively with a single LDM. After each iteration, <i>N</i> frames are generated and the last <i>M</i> frames are used as prompt frames for the next iteration. Three key strategies are proposed for generating natural and smooth videos. Frame-level Noise Reversion (FNR) is used as a basic module for re-using the initial noise in a reversed order from the last video clip. Past-dependent Noise Sampling (PNS) brings new random noise for the last several video frames. Temporal consistencies between video clips are refined by Denoising with Staged Guidance (DSG).
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop content">
+    <h2 class="title">Quantitative Evaluation</h2>
+    <figure>
+      <img src="./static/images/results.png" alt="Pipeline of our method." width=560px>
+      <figcaption>Quantitative evaluation on UCF-101.</figcaption>
+    </figure>
+    <p>
+      Following previous works like Make-A-Video and Video LDM, we use UCF-101, a dataset for video recognition, for evaluating FVD (Fr&#233chet Video Distance) and IS (Inception Score). Since there are only 101 brief class names such as “knitting” and “diving” in UCF-101, we devise a descriptive prompt for each class for video synthesis in our experiments. Following Make-A-Video, 10K videos are generated by VidRD following the same class distribution as the training set. It is worth noting that the experimental settings in VideoFactory are slightly different from VidRD. VideoFactory generates 100 samples for each class. The results of quantitative evaluation demonstrate that VidRD achieves the best FVD and IS while using much fewer videos for training. Meanwhile, fine-tuning the decoder of VAE helps improve VidRD further. The reason is that a temporal-aware decoder can make restoring pixels from latent features more accurate.
+    </p>
+  </div>
+</section>
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{reuse2023,
+  title     = {Reuse and Diffuse: Iterative Denoising for Text-to-Video Generation},
+  journal   = {arXiv preprint arXiv:2309.03549},
+  year      = {2023}
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link"
+         href="https://arxiv.org/pdf/2309.03549">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="https://github.com/anonymous0x233/ReuseAndDiffuse" class="external-link" disabled>
+        <i class="fab fa-github"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+          <p>
+            Website template credit to <a href="https://nerfies.github.io/">Nerfies</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
