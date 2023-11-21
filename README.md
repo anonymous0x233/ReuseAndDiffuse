@@ -2,7 +2,7 @@
 
 [Website](https://anonymous0x233.github.io/ReuseAndDiffuse) • [Paper](https://arxiv.org/abs/2309.03549) • [Code](https://github.com/anonymous0x233/ReuseAndDiffuse)
 
-## Model preparation [20231018]
+## Model preparation
 
 1. **VidRD LDM model**: [GoogleDrive](https://drive.google.com/file/d/1rdT9cnMjjoggFBsu3LKFFJBl3b_gXa-N/view?usp=drive_link)
 2. **VidRD Fine-tuned VAE**: [GoogleDrive](https://drive.google.com/file/d/1HfhpI4zy4kBmRSy0G600UDnDgJh6bAQp/view?usp=drive_link)
